@@ -6,7 +6,7 @@
 # * Filename      : openvpn.sh
 # * Description   : centos7 openvpn安装脚本
 # * *******************************************************
-open_fielwall(){
+open_firewall(){
 systemctl start firewalld.service
 firewall-cmd --state
 firewall-cmd --zone=public --list-all
@@ -49,24 +49,26 @@ open_firewall #关闭openVPN 防火墙
 echo "安装成功正在启动"
 start_openvpn
 }
-gen_clien(){
+gen_client(){
 echo "正在获取IP..."
 ip=`curl -s v4.ident.me`
 echo -e "请输入客户端名字\c"
 read name
-echo -e "设置密码？(y)"
+echo -e "设置密码？(y/n)\c"
 read ispasswd
+cd /etc/openvpn/easy-rsa/3/
 if [ "$ispasswd" = y ];then
-		/etc/openvpn/easy-rsa/3/easyrsa build-client-full ${name}
+		./easyrsa build-client-full ${name}
 	else
-		/etc/openvpn/easy-rsa/3/easyrsa build-client-full ${name} nopass
+		./easyrsa build-client-full ${name} nopass
 fi
-pki_path="/etc/openvpn/easy-rsa/3/pki/"
-ca=`cat ${pki_path}ca.crt`
+pki_path="/etc/openvpn/easy-rsa/3/pki"
+ca=`cat ${pki_path}/ca.crt`
 cert=`cat ${pki_path}/issued/${name}.crt`
 key=`cat ${pki_path}/private/${name}.key`
 ta=`cat /etc/openvpn/ta.key`
-cat <<EOF
+touch /etc/openvpn/client/${name}.ovpn
+cat > /etc/openvpn/client/${name}.ovpn <<EOF
 client
 dev tun
 proto udp
@@ -93,7 +95,6 @@ key-direction 1
 ${ta}
 </tls-auth>
 EOF
->> /etc/openvpn/client/${name}.ovpn
 echo "用户生成成功，配置文件在/etc/openvpn/client/${name}.ovpn"
 }
 pwd_path=$(cd `dirname $0`; pwd)
@@ -101,6 +102,8 @@ echo "欢迎使用centos7安装脚本，请输入数字选择功能"
 echo "1.安装"
 echo "2.启动服务"
 echo "3.生成客户端"
+echo "4.开启防火墙"
+echo "5.关闭服务"
 echo "0.退出"
 echo -e "请输入数字>>\c"
 read flag
@@ -112,7 +115,10 @@ case $flag in
 	start_openvpn
 	;;
 	3)
-	echo "生成"
+	gen_client
+	;;
+	4)
+	open_firewall
 	;;
 	q|0)
 	echo "欢迎再次使用,脚本已退出"
