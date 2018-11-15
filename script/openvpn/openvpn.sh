@@ -97,6 +97,9 @@ ${ta}
 EOF
 echo "用户生成成功，配置文件在/etc/openvpn/client/${name}.ovpn"
 }
+one_key_install(){
+echo "一键搭建"
+}
 pwd_path=$(cd `dirname $0`; pwd)
 echo "欢迎使用centos7安装脚本，请输入数字选择功能"
 echo "1.安装"
@@ -104,6 +107,7 @@ echo "2.启动服务"
 echo "3.生成客户端"
 echo "4.开启防火墙"
 echo "5.关闭服务"
+echo "6.一键搭建校园网破解"
 echo "0.退出"
 echo -e "请输入数字>>\c"
 read flag
@@ -119,6 +123,13 @@ case $flag in
 	;;
 	4)
 	open_firewall
+	;;
+	5)
+	systemctl stop openvpn@server
+	echo "openvpn服务已停止"
+	;;
+	6)
+	one_key_install
 	;;
 	q|0)
 	echo "欢迎再次使用,脚本已退出"
